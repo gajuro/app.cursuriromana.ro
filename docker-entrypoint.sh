@@ -22,14 +22,26 @@ fi
 # Function to save config.php to persistent storage
 save_config() {
     if [ -f "$CONFIG_APP" ]; then
-        echo "✓ Saving config.php to persistent storage..."
-        cp "$CONFIG_APP" "$CONFIG_PERSISTENT"
-        echo "✓ Config saved successfully"
+        # Only copy if changed to avoid unnecessary writes
+        if ! cmp -s "$CONFIG_APP" "$CONFIG_PERSISTENT" 2>/dev/null; then
+            echo "✓ Saving config.php to persistent storage..."
+            cp "$CONFIG_APP" "$CONFIG_PERSISTENT"
+            echo "✓ Config saved successfully at $(date)"
+        fi
     fi
 }
 
-# Save config on container stop
-trap save_config EXIT SIGTERM SIGINT
+# Background job to periodically save config (every 30 seconds)
+# This ensures config is saved even if container is killed ungracefully
+(
+    while true; do
+        sleep 30
+        save_config
+    done
+) &
+
+# Save immediately on graceful shutdown signals
+trap 'save_config; exit 0' SIGTERM SIGINT
 
 # Set correct permissions
 chown -R www-data:www-data /var/www/moodledata /var/www/localcache /var/www/persistent
