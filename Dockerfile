@@ -39,7 +39,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 RUN pecl install apcu && docker-php-ext-enable apcu
 
 # Configure Apache
-RUN a2enmod rewrite expires headers
+RUN a2enmod rewrite expires headers remoteip
 
 # Set recommended PHP.ini settings for Moodle
 RUN { \
@@ -83,6 +83,17 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
     && sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|g' /etc/apache2/apache2.conf \
     && echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Configure Apache to trust X-Forwarded-Proto from reverse proxy (for HTTPS detection)
+RUN { \
+    echo ''; \
+    echo '# Trust X-Forwarded-Proto header from reverse proxy'; \
+    echo 'SetEnvIf X-Forwarded-Proto "https" HTTPS=on'; \
+    echo 'RemoteIPHeader X-Forwarded-For'; \
+    echo 'RemoteIPInternalProxy 10.0.0.0/8'; \
+    echo 'RemoteIPInternalProxy 172.16.0.0/12'; \
+    echo 'RemoteIPInternalProxy 192.168.0.0/16'; \
+} >> /etc/apache2/apache2.conf
 
 # Configure Apache for Moodle 4.5+ with Routing Engine
 RUN { \
