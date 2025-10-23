@@ -99,9 +99,9 @@ RUN { \
 # Expose port
 EXPOSE 80
 
-# Health check
+# Health check - follow redirects since root redirects to /public/
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -fL http://localhost/ || exit 1
 
 # Set entrypoint and default command
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
