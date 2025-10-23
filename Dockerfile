@@ -110,8 +110,12 @@ RUN { \
     echo '    RewriteRule ^public/(.*)$ /$1 [R=301,L]'; \
     echo ''; \
     echo '    # Only route to r.php if file/directory does not exist'; \
+    echo '    # Exclude theme assets, pix, and static resources to prevent redirect loops'; \
     echo '    RewriteCond %{REQUEST_FILENAME} !-f'; \
     echo '    RewriteCond %{REQUEST_FILENAME} !-d'; \
+    echo '    RewriteCond %{REQUEST_URI} !^/theme/'; \
+    echo '    RewriteCond %{REQUEST_URI} !^/pix/'; \
+    echo '    RewriteCond %{REQUEST_URI} !\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$'; \
     echo '    RewriteRule ^ /r.php [L]'; \
     echo '</Directory>'; \
 } >> /etc/apache2/apache2.conf
