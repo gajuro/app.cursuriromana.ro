@@ -1,12 +1,40 @@
 version: '3.8'
 
 services:
-  moodle:
+  nginx:
+    image: nginx:alpine
+    container_name: moodle-nginx
+    ports:
+      - "80:80"
+    volumes:
+      # Nginx configuration
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      
+      # Shared application files (read-only)
+      - moodle_app:/var/www/html:ro
+      
+      # Shared data directory (read-only for nginx, just serving)
+      - moodle_data:/var/www/moodledata:ro
+      
+      # Shared cache (read-only)
+      - moodle_localcache:/var/www/localcache:ro
+    depends_on:
+      php-fpm:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  php-fpm:
     build:
       context: .
       dockerfile: Dockerfile
       target: moodle
-    container_name: moodle-app
+    container_name: moodle-php-fpm
     environment:
       # Database configuration
       - MOODLE_DB_TYPE=${DB_TYPE:-mariadb}
@@ -28,6 +56,9 @@ services:
       - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
       - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
     volumes:
+      # Application code (shared with nginx)
+      - moodle_app:/var/www/html:rw
+      
       # Persistent config storage (managed by entrypoint script)
       - moodle_config:/var/www/persistent:rw
       
@@ -58,6 +89,8 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --innodb-file-per-table=1
       - --max-allowed-packet=256M
+      - --innodb-buffer-pool-size=512M
+      - --query-cache-size=32M
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -86,6 +119,10 @@ services:
     restart: unless-stopped
 
 volumes:
+  # Application code (shared between nginx and php-fpm)
+  moodle_app:
+    driver: local
+  
   # Config persistence (stores config.php via entrypoint)
   moodle_config:
     driver: local

@@ -1,7 +1,7 @@
 # ============================================
 # Stage 1: Base OS Setup
 # ============================================
-FROM php:8.2-apache AS os
+FROM php:8.2-fpm AS os
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -39,9 +39,6 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 RUN pecl install apcu redis \
     && docker-php-ext-enable apcu redis
 
-# Configure Apache
-RUN a2enmod rewrite expires headers remoteip
-
 # Set recommended PHP.ini settings for Moodle
 RUN { \
     echo 'max_execution_time = 300'; \
@@ -51,14 +48,29 @@ RUN { \
     echo 'upload_max_filesize = 100M'; \
     echo 'max_input_vars = 5000'; \
     echo 'opcache.enable = 1'; \
-    echo 'opcache.memory_consumption = 128'; \
-    echo 'opcache.max_accelerated_files = 10000'; \
+    echo 'opcache.memory_consumption = 256'; \
+    echo 'opcache.max_accelerated_files = 20000'; \
     echo 'opcache.revalidate_freq = 60'; \
     echo 'opcache.use_cwd = 1'; \
     echo 'opcache.validate_timestamps = 1'; \
     echo 'opcache.save_comments = 1'; \
     echo 'opcache.enable_file_override = 0'; \
 } > /usr/local/etc/php/conf.d/moodle.ini
+
+# Configure PHP-FPM
+RUN { \
+    echo '[www]'; \
+    echo 'user = www-data'; \
+    echo 'group = www-data'; \
+    echo 'listen = 9000'; \
+    echo 'pm = dynamic'; \
+    echo 'pm.max_children = 50'; \
+    echo 'pm.start_servers = 5'; \
+    echo 'pm.min_spare_servers = 5'; \
+    echo 'pm.max_spare_servers = 35'; \
+    echo 'pm.max_requests = 500'; \
+    echo 'clear_env = no'; \
+} > /usr/local/etc/php-fpm.d/www.conf
 
 # ============================================
 # Stage 2: Moodle Application
@@ -80,54 +92,13 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chown -R www-data:www-data /var/www/html /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chmod -R 755 /var/www/html
 
-# Configure Apache DocumentRoot to point to public directory (Moodle 4.5+ structure)
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
-    && sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|g' /etc/apache2/apache2.conf \
-    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
+# Expose PHP-FPM port
+EXPOSE 9000
 
-# Configure Apache to trust X-Forwarded-Proto from reverse proxy (for HTTPS detection)
-RUN { \
-    echo ''; \
-    echo '# Trust X-Forwarded-Proto header from reverse proxy'; \
-    echo 'SetEnvIf X-Forwarded-Proto "https" HTTPS=on'; \
-    echo 'RemoteIPHeader X-Forwarded-For'; \
-    echo 'RemoteIPInternalProxy 10.0.0.0/8'; \
-    echo 'RemoteIPInternalProxy 172.16.0.0/12'; \
-    echo 'RemoteIPInternalProxy 192.168.0.0/16'; \
-} >> /etc/apache2/apache2.conf
-
-# Configure Apache for Moodle 4.5+ with Routing Engine
-RUN { \
-    echo '<Directory /var/www/html/public>'; \
-    echo '    Options Indexes FollowSymLinks'; \
-    echo '    AllowOverride None'; \
-    echo '    Require all granted'; \
-    echo '    DirectoryIndex index.php index.html'; \
-    echo ''; \
-    echo '    RewriteEngine On'; \
-    echo ''; \
-    echo '    # Strip /public/ prefix if present (legacy URLs)'; \
-    echo '    RewriteCond %{REQUEST_URI} ^/public/(.*)$'; \
-    echo '    RewriteRule ^public/(.*)$ /$1 [R=301,L]'; \
-    echo ''; \
-    echo '    # Only route to r.php if file/directory does not exist'; \
-    echo '    # Exclude theme assets, pix, and static resources to prevent redirect loops'; \
-    echo '    RewriteCond %{REQUEST_FILENAME} !-f'; \
-    echo '    RewriteCond %{REQUEST_FILENAME} !-d'; \
-    echo '    RewriteCond %{REQUEST_URI} !^/theme/'; \
-    echo '    RewriteCond %{REQUEST_URI} !^/pix/'; \
-    echo '    RewriteCond %{REQUEST_URI} !\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$'; \
-    echo '    RewriteRule ^ /r.php [L]'; \
-    echo '</Directory>'; \
-} >> /etc/apache2/apache2.conf
-
-# Expose port
-EXPOSE 80
-
-# Health check - check install.php since index.php redirects when no config
+# Health check for PHP-FPM
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost/install.php || curl -f http://localhost/ || exit 1
+    CMD php-fpm -t || exit 1
 
 # Set entrypoint and default command
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["apache2-foreground"]
+CMD ["php-fpm"]
