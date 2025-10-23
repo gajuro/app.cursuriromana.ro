@@ -35,8 +35,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     mbstring \
     xml
 
-# Install and configure APCu
-RUN pecl install apcu && docker-php-ext-enable apcu
+# Install and configure APCu and Redis
+RUN pecl install apcu redis \
+    && docker-php-ext-enable apcu redis
 
 # Configure Apache
 RUN a2enmod rewrite expires headers remoteip

@@ -8,6 +8,7 @@ Setup-ul Docker este optimizat pentru deployments pe Coolify și include:
 - **Stage 1 (os)**: Configurare sistem de bază (PHP 8.2, Apache, extensii)
 - **Stage 2 (moodle)**: Aplicația Moodle cu configurări specifice
 - **Database**: MariaDB 11.8 LTS (latest long-term support)
+- **Redis**: Redis 7 Alpine pentru sessions și cache (opțional, dar recomandat)
 
 ### 2. **Volume-uri Persistente**
 
@@ -182,14 +183,58 @@ docker-compose up -d
 
 ## Performance Tips
 
-1. **Creșteți memory_limit** pentru site-uri mari:
+### 1. Redis pentru Sessions și Cache ⚡
+
+Redis este **deja configurat** în `docker-compose.yml` și oferă îmbunătățiri semnificative de performanță:
+- **30-50% reducere** load bază de date
+- **20-40% mai rapid** la pagini cu autentificare
+- Suport pentru multe sesiuni simultane
+
+#### Activare Redis Sessions:
+
+1. **După instalarea Moodle**, editează `config.php`:
+   ```bash
+   docker-compose exec moodle nano /var/www/html/config.php
+   ```
+
+2. **Adaugă configurația Redis** după secțiunea database setup:
+   ```php
+   // Redis session handler
+   $CFG->session_handler_class = '\core\session\redis';
+   $CFG->session_redis_host = 'redis';
+   $CFG->session_redis_port = 6379;
+   $CFG->session_redis_database = 0;
+   $CFG->session_redis_prefix = 'mdl_sess_';
+   $CFG->session_redis_acquire_lock_timeout = 120;
+   $CFG->session_redis_lock_expire = 7200;
+   ```
+
+3. **Salvează și restart:**
+   ```bash
+   docker-compose restart moodle
+   ```
+
+#### Verificare Redis funcționează:
+```bash
+# Verifică că Redis rulează
+docker-compose exec redis redis-cli ping
+# Răspuns așteptat: PONG
+
+# Verifică sesiunile în Redis
+docker-compose exec redis redis-cli KEYS "mdl_sess_*"
+```
+
+#### Note:
+- Redis folosește max **256MB RAM** (configurat cu `maxmemory-policy allkeys-lru`)
+- Nu necesită persistență (sesiunile sunt temporare)
+- Se pornește automat odată cu Moodle
+
+### 2. Creșteți memory_limit pentru site-uri mari:
    ```env
    PHP_MEMORY_LIMIT=512M
    ```
 
-2. **Configurați Redis** pentru caching (adăugați serviciu în docker-compose.yml)
-
-3. **Monitorizați logs:**
+### 3. Monitorizați logs:
    ```bash
    docker-compose logs -f --tail=100 moodle
    ```

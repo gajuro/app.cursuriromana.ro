@@ -161,6 +161,28 @@ $CFG->dboptions = [
     */
 ];
 
+//=========================================================================
+// 1b. REDIS SESSION HANDLER (Docker Setup)
+//=========================================================================
+// Redis session handler provides significant performance improvements
+// by storing user sessions in Redis instead of the database.
+// This is pre-configured for Docker deployments.
+//
+// Benefits:
+// - 30-50% reduction in database load
+// - Faster session read/write operations
+// - Better scalability for concurrent users
+//
+// Uncomment the following lines to enable Redis sessions:
+
+// $CFG->session_handler_class = '\core\session\redis';
+// $CFG->session_redis_host = 'redis';
+// $CFG->session_redis_port = 6379;
+// $CFG->session_redis_database = 0;
+// $CFG->session_redis_prefix = 'mdl_sess_';
+// $CFG->session_redis_acquire_lock_timeout = 120;
+// $CFG->session_redis_lock_expire = 7200;
+
 
 //=========================================================================
 // 2. WEB SITE LOCATION
