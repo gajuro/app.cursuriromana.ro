@@ -11,7 +11,7 @@ nano .env  # editează cu valorile tale
 docker-compose up -d
 
 # 3. Verifică logs
-docker-compose logs -f moodle
+docker-compose logs -f web
 
 # 4. Accesează: http://localhost (sau URL-ul configurat)
 ```
@@ -19,13 +19,14 @@ docker-compose logs -f moodle
 ## 📦 Ce Include
 
 - **Dockerfile multi-stage**: `os` (sistem de bază) + `moodle` (aplicație)
+- **Container unic**: nginx + PHP-FPM gestionat de supervisor
 - **Volume persistente**:
-  - **Bind mount** - `config.php` (fișier individual persist)
+  - **Named volume** - `moodle_config` (config.php persistent)
   - **Named volume** - `moodle_data` (uploads, cache, sessions)
   - **Named volume** - `moodle_localcache` (cache local pentru performanță)
   - **Named volume** - `db_data` (baza de date MariaDB 11.8 LTS)
 - **Entrypoint script** - setează permisiuni și gestionează config.php
-- **Health checks** - pentru monitoring
+- **Health checks** - verifică nginx și PHP-FPM
 
 ## 🔧 Deployment Coolify
 
@@ -65,10 +66,10 @@ docker-compose restart
 docker-compose down
 
 # Logs
-docker-compose logs -f moodle
+docker-compose logs -f web
 
 # Bash în container
-docker-compose exec moodle bash
+docker-compose exec web bash
 
 # Backup DB
 docker-compose exec db mysqldump -u root -p${DB_ROOT_PASSWORD} ${DB_NAME} > backup.sql

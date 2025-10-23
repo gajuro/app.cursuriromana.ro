@@ -5,14 +5,17 @@
 Setup-ul Docker este optimizat pentru deployments pe Coolify și include:
 
 ### 1. **Arhitectură Containerizată**
-- **nginx**: Web server de înaltă performanță (nginx:alpine)
-- **PHP-FPM**: Procesare PHP 8.2 cu extensii complete pentru Moodle
-- **MariaDB**: MariaDB 11.8 LTS (latest long-term support) cu optimizări performanță
-- **Redis**: Redis 7 Alpine pentru sessions și cache (inclus implicit)
+- **web**: Container unic cu nginx + PHP-FPM 8.2 (gestionat de supervisor)
+  - nginx: web server de înaltă performanță
+  - PHP-FPM: procesare PHP cu extensii complete pentru Moodle
+- **db**: MariaDB 11.8 LTS (latest long-term support) cu optimizări performanță
+- **redis**: Redis 7 Alpine pentru sessions și cache (inclus implicit)
 
 ### 2. **Dockerfile Multi-Stage**
-- **Stage 1 (os)**: Configurare sistem de bază (PHP 8.2-FPM, extensii, optimizări)
-- **Stage 2 (moodle)**: Aplicația Moodle cu configurări PHP-FPM specifice
+- **Stage 1 (os)**: Configurare sistem de bază (PHP 8.2-FPM, nginx, supervisor, extensii, optimizări)
+- **Stage 2 (moodle)**: Aplicația Moodle cu configurări nginx și PHP-FPM
+
+**Supervisor** gestionează ambele servicii (nginx și PHP-FPM) în același container.
 
 ### 3. **Volume-uri Persistente**
 
@@ -68,7 +71,7 @@ docker-compose build
 docker-compose up -d
 
 # Verifică logs
-docker-compose logs -f moodle
+docker-compose logs -f web
 ```
 
 ### 3. Instalare Moodle
@@ -133,8 +136,8 @@ docker-compose restart
 # Verifică servicii
 docker-compose ps
 
-# Accesează bash în container
-docker-compose exec moodle bash
+# Accesează bash în containerul web
+docker-compose exec web bash
 
 # Backup volume config
 docker run --rm -v app.cursuriromana.ro_moodle_config:/data -v $(pwd):/backup alpine tar czf /backup/config-backup.tar.gz -C /data .
@@ -171,12 +174,16 @@ docker-compose exec db mysqldump -u root -p${DB_ROOT_PASSWORD} ${DB_NAME} > mood
 
 ### Container nu pornește
 ```bash
-docker-compose logs moodle
+# Verifică logs
+docker-compose logs web
+
+# Verifică status supervisor
+docker-compose exec web supervisorctl status
 ```
 
 ### Erori de permisiuni
 ```bash
-docker-compose exec moodle chown -R www-data:www-data /var/www/html /var/www/moodledata
+docker-compose exec web chown -R www-data:www-data /var/www/html /var/www/moodledata
 ```
 
 ### Reset complet (ATENȚIE: șterge toate datele!)
@@ -198,7 +205,7 @@ Redis este **deja configurat** în `docker-compose.yml` și oferă îmbunătăț
 
 1. **După instalarea Moodle**, editează `config.php`:
    ```bash
-   docker-compose exec php-fpm nano /var/www/html/config.php
+   docker-compose exec web nano /var/www/html/config.php
    ```
 
 2. **Adaugă configurația Redis** după secțiunea database setup:
@@ -215,7 +222,7 @@ Redis este **deja configurat** în `docker-compose.yml` și oferă îmbunătăț
 
 3. **Salvează și restart:**
    ```bash
-   docker-compose restart php-fpm
+   docker-compose restart web
    ```
 
 #### Verificare Redis funcționează:
@@ -269,14 +276,14 @@ Acest setup include **optimizări automate** pentru performanță maximă:
 
 ### 4. Monitorizați logs:
    ```bash
-   # nginx logs
-   docker-compose logs -f --tail=100 nginx
-   
-   # PHP-FPM logs
-   docker-compose logs -f --tail=100 php-fpm
+   # Logs container web (nginx + PHP-FPM)
+   docker-compose logs -f --tail=100 web
    
    # Toate serviciile
    docker-compose logs -f --tail=50
+   
+   # Status supervisor (procese nginx și PHP-FPM)
+   docker-compose exec web supervisorctl status
    ```
 
 ## Securitate

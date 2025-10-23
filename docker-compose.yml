@@ -1,33 +1,12 @@
 version: '3.8'
 
 services:
-  nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile.nginx
-    container_name: moodle-nginx
-    volumes:
-      # Shared data directory (for serving files, read-only)
-      - moodle_data:/var/www/moodledata:ro
-      
-      # Shared cache (read-only)
-      - moodle_localcache:/var/www/localcache:ro
-    depends_on:
-      - php-fpm
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  php-fpm:
+  web:
     build:
       context: .
       dockerfile: Dockerfile
       target: moodle
-    container_name: moodle-php-fpm
+    container_name: moodle-web
     environment:
       # Database configuration
       - MOODLE_DB_TYPE=${DB_TYPE:-mariadb}
@@ -62,12 +41,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    ports:
+      - "80:80"
     healthcheck:
-      test: ["CMD-SHELL", "pgrep php-fpm > /dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
+      test: ["CMD-SHELL", "pgrep nginx > /dev/null && pgrep php-fpm > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     restart: unless-stopped
 
   db:

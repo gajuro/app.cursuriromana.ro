@@ -47,7 +47,7 @@ trap 'save_config; exit 0' SIGTERM SIGINT
 chown -R www-data:www-data /var/www/moodledata /var/www/localcache /var/www/persistent
 chmod -R 755 /var/www/html
 
-echo "=== Starting Apache ==="
+echo "=== Starting nginx and PHP-FPM ==="
 
-# Execute the main command (Apache)
+# Execute the main command (supervisord managing both nginx and PHP-FPM)
 exec "$@"

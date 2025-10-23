@@ -3,7 +3,7 @@
 # ============================================
 FROM php:8.2-fpm AS os
 
-# Install system dependencies
+# Install system dependencies including nginx
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
+    nginx \
+    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure PHP extensions
@@ -62,7 +64,7 @@ RUN { \
     echo '[www]'; \
     echo 'user = www-data'; \
     echo 'group = www-data'; \
-    echo 'listen = 0.0.0.0:9000'; \
+    echo 'listen = 127.0.0.1:9000'; \
     echo 'pm = dynamic'; \
     echo 'pm.max_children = 50'; \
     echo 'pm.start_servers = 5'; \
@@ -83,6 +85,11 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
+# Copy nginx configuration
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY nginx.conf /etc/nginx/sites-available/moodle.conf
+RUN ln -s /etc/nginx/sites-available/moodle.conf /etc/nginx/sites-enabled/moodle.conf
+
 # Copy and setup entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
@@ -92,13 +99,42 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chown -R www-data:www-data /var/www/html /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chmod -R 755 /var/www/html
 
-# Expose PHP-FPM port
-EXPOSE 9000
+# Expose HTTP port (nginx)
+EXPOSE 80
 
-# Health check for PHP-FPM - verificăm că procesul rulează
+# Health check - verify both nginx and PHP-FPM are running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD pgrep php-fpm > /dev/null || exit 1
+    CMD pgrep nginx > /dev/null && pgrep php-fpm > /dev/null || exit 1
+
+# Create supervisor configuration for managing both services
+RUN mkdir -p /var/log/supervisor
+COPY <<EOF /etc/supervisor/conf.d/supervisord.conf
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisor/supervisord.log
+pidfile=/var/run/supervisord.pid
+
+[program:php-fpm]
+command=/usr/local/sbin/php-fpm --nodaemonize
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+priority=10
+
+[program:nginx]
+command=/usr/sbin/nginx -g 'daemon off;'
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+priority=20
+EOF
 
 # Set entrypoint and default command
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["php-fpm"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

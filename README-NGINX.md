@@ -1,6 +1,6 @@
 # 🚀 Migrare la nginx: Ghid Complet
 
-Acest setup folosește **nginx + PHP-FPM** în loc de Apache pentru performanță maximă.
+Acest setup folosește **nginx + PHP-FPM** într-un singur container în loc de Apache pentru performanță maximă și simplitate operațională.
 
 ## De ce nginx?
 
@@ -15,48 +15,44 @@ Acest setup folosește **nginx + PHP-FPM** în loc de Apache pentru performanț�
 ```
 [Coolify/Reverse Proxy]
         ↓
-    [nginx] ← servește static files
-        ↓
-   [PHP-FPM] ← procesează PHP
+[Container Unic]
+  ├─ nginx (port 80) ← servește static files
+  └─ PHP-FPM (localhost:9000) ← procesează PHP
         ↓
    [MariaDB + Redis]
 ```
 
 ## Structura Containerelor
 
-### 1. **nginx** (nginx:alpine)
+### 1. **web** (custom - built from Dockerfile)
+**Container unic cu nginx + PHP-FPM** (gestionat de supervisor)
 - Port: 80 (expus)
-- Rol: Web server, servire fișiere statice, reverse proxy către PHP-FPM
-- Config: `nginx.conf`
-- Health check: wget pe localhost
-
-### 2. **php-fpm** (custom - built from Dockerfile)
-- Port: 9000 (intern)
-- Rol: Procesare PHP, Moodle logic
+- Rol: Web server + procesare PHP
+- nginx: servire fișiere statice, reverse proxy către PHP-FPM local
+- PHP-FPM: procesare PHP, Moodle logic pe localhost:9000
 - Pool config: 50 max children, dynamic PM
-- Health check: `php-fpm -t`
+- Health check: verifică ambele procese (nginx și php-fpm)
 
-### 3. **MariaDB** (mariadb:11.8)
+### 2. **db** (MariaDB 11.8)
 - Optimizări: 512MB buffer pool, 32MB query cache
 
-### 4. **Redis** (redis:7-alpine)
+### 3. **redis** (redis:7-alpine)
 - Rol: Session storage, cache
 
-## Volume-uri Partajate
+## Volume-uri
 
-Volume-ul `moodle_app` este **partajat** între nginx și PHP-FPM:
-- **nginx**: Read-only (doar servește fișiere)
-- **PHP-FPM**: Read-write (execută și modifică)
+Volume-urile sunt montate direct în containerul **web**:
+- **moodle_config**: `/var/www/persistent` - configurație Moodle persistentă
+- **moodle_data**: `/var/www/moodledata` - date utilizatori, uploads, cache
+- **moodle_localcache**: `/var/www/localcache` - cache local
 
 ```yaml
 # În docker-compose.yml
-nginx:
+web:
   volumes:
-    - moodle_app:/var/www/html:ro  # read-only
-
-php-fpm:
-  volumes:
-    - moodle_app:/var/www/html:rw  # read-write
+    - moodle_config:/var/www/persistent:rw
+    - moodle_data:/var/www/moodledata:rw
+    - moodle_localcache:/var/www/localcache:rw
 ```
 
 ## Configurație nginx
@@ -78,10 +74,10 @@ location ~* \.(jpg|jpeg|gif|png|css|js)$ {
 }
 ```
 
-### 3. **PHP-FPM Pass-through**
+### 3. **PHP-FPM Pass-through** (localhost)
 ```nginx
 location ~ \.php$ {
-    fastcgi_pass php-fpm:9000;
+    fastcgi_pass 127.0.0.1:9000;
     # ... fastcgi params
 }
 ```
@@ -136,25 +132,22 @@ docker-compose ps
 ### 2. Verificare nginx funcționează
 ```bash
 # Test nginx config
-docker-compose exec nginx nginx -t
+docker-compose exec web nginx -t
 
 # Reload nginx (fără restart)
-docker-compose exec nginx nginx -s reload
+docker-compose exec web nginx -s reload
 
-# Logs nginx
-docker-compose logs -f nginx
+# Logs web container
+docker-compose logs -f web
 ```
 
 ### 3. Verificare PHP-FPM funcționează
 ```bash
 # Test PHP-FPM config
-docker-compose exec php-fpm php-fpm -t
+docker-compose exec web php-fpm -t
 
-# Status pool
-docker-compose exec php-fpm kill -USR1 1
-
-# Logs PHP-FPM
-docker-compose logs -f php-fpm
+# Verifică procese active
+docker-compose exec web ps aux | grep -E '(nginx|php-fpm)'
 ```
 
 ## Debugging
@@ -162,19 +155,19 @@ docker-compose logs -f php-fpm
 ### nginx nu găsește fișierele:
 ```bash
 # Verifică volume-ul este montat
-docker-compose exec nginx ls -la /var/www/html/public
+docker-compose exec web ls -la /var/www/html/public
 
 # Verifică permissions
-docker-compose exec php-fpm ls -la /var/www/html
+docker-compose exec web ls -la /var/www/html
 ```
 
 ### PHP-FPM connection refused:
 ```bash
-# Verifică PHP-FPM rulează pe port 9000
-docker-compose exec php-fpm netstat -tulpn | grep 9000
+# Verifică ambele procese rulează
+docker-compose exec web ps aux | grep -E '(nginx|php-fpm)'
 
-# Verifică nginx poate comunica cu php-fpm
-docker-compose exec nginx ping php-fpm
+# Verifică PHP-FPM pe localhost:9000
+docker-compose exec web netstat -tulpn | grep 9000
 ```
 
 ### Static files nu se servesc:
@@ -213,13 +206,16 @@ fastcgi_buffer_size 64k;
 ### nginx Stats:
 ```bash
 # Requests/sec, connections
-docker-compose exec nginx cat /var/log/nginx/moodle-access.log | tail -100
+docker-compose exec web cat /var/log/nginx/moodle-access.log | tail -100
 ```
 
 ### PHP-FPM Pool Stats:
 ```bash
 # Vezi procese active
-docker-compose exec php-fpm ps aux | grep php-fpm
+docker-compose exec web ps aux | grep php-fpm
+
+# Supervisor status
+docker-compose exec web supervisorctl status
 ```
 
 ### Resource Usage:
