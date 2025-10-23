@@ -62,7 +62,7 @@ RUN { \
     echo '[www]'; \
     echo 'user = www-data'; \
     echo 'group = www-data'; \
-    echo 'listen = 9000'; \
+    echo 'listen = 0.0.0.0:9000'; \
     echo 'pm = dynamic'; \
     echo 'pm.max_children = 50'; \
     echo 'pm.start_servers = 5'; \
@@ -95,9 +95,9 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
 # Expose PHP-FPM port
 EXPOSE 9000
 
-# Health check for PHP-FPM
+# Health check for PHP-FPM - verificăm că procesul rulează
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD php-fpm -t || exit 1
+    CMD pgrep php-fpm > /dev/null || exit 1
 
 # Set entrypoint and default command
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
