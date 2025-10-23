@@ -7,10 +7,7 @@ services:
       dockerfile: Dockerfile.nginx
     container_name: moodle-nginx
     volumes:
-      # Shared application files (read-only)
-      - moodle_app:/var/www/html:ro
-      
-      # Shared data directory (read-only for nginx, just serving)
+      # Shared data directory (for serving files, read-only)
       - moodle_data:/var/www/moodledata:ro
       
       # Shared cache (read-only)
@@ -53,9 +50,6 @@ services:
       - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
       - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
     volumes:
-      # Application code (shared with nginx)
-      - moodle_app:/var/www/html:rw
-      
       # Persistent config storage (managed by entrypoint script)
       - moodle_config:/var/www/persistent:rw
       
@@ -116,10 +110,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  # Application code (shared between nginx and php-fpm)
-  moodle_app:
-    driver: local
-  
   # Config persistence (stores config.php via entrypoint)
   moodle_config:
     driver: local
