@@ -79,16 +79,20 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chown -R www-data:www-data /var/www/html /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chmod -R 755 /var/www/html
 
-# Configure Apache DocumentRoot to point to public directory
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
-    && sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
-
-# Update Apache directory permissions
+# Update Apache directory permissions for /var/www/html and /var/www/html/public
 RUN { \
+    echo '<Directory /var/www/html>'; \
+    echo '    Options Indexes FollowSymLinks'; \
+    echo '    AllowOverride All'; \
+    echo '    Require all granted'; \
+    echo '    DirectoryIndex index.php index.html'; \
+    echo '</Directory>'; \
+    echo ''; \
     echo '<Directory /var/www/html/public>'; \
     echo '    Options Indexes FollowSymLinks'; \
     echo '    AllowOverride All'; \
     echo '    Require all granted'; \
+    echo '    DirectoryIndex index.php index.html'; \
     echo '</Directory>'; \
 } >> /etc/apache2/apache2.conf
 

@@ -2,7 +2,7 @@
 set -e
 
 CONFIG_PERSISTENT="/var/www/persistent/config.php"
-CONFIG_APP="/var/www/html/config.php"
+CONFIG_APP="/var/www/html/public/config.php"
 
 echo "=== Moodle Docker Entrypoint ==="
 
