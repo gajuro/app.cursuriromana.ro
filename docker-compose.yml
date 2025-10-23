@@ -2,12 +2,11 @@ version: '3.8'
 
 services:
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
     container_name: moodle-nginx
     volumes:
-      # Nginx configuration
-      - ./nginx.conf:/etc/nginx/conf.d/moodle.conf:ro
-      
       # Shared application files (read-only)
       - moodle_app:/var/www/html:ro
       
