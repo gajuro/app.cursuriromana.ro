@@ -86,17 +86,22 @@ RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /e
 
 # Configure Apache for Moodle 4.5+ with Routing Engine
 RUN { \
-    echo '# Strip /public/ prefix if present (handles legacy URLs and cached redirects)'; \
-    echo 'RewriteEngine On'; \
-    echo 'RewriteCond %{REQUEST_URI} ^/public/(.*)'; \
-    echo 'RewriteRule ^public/(.*)$ /$1 [R=301,L]'; \
-    echo ''; \
     echo '<Directory /var/www/html/public>'; \
     echo '    Options Indexes FollowSymLinks'; \
     echo '    AllowOverride None'; \
     echo '    Require all granted'; \
     echo '    DirectoryIndex index.php index.html'; \
-    echo '    FallbackResource /r.php'; \
+    echo ''; \
+    echo '    RewriteEngine On'; \
+    echo ''; \
+    echo '    # Strip /public/ prefix if present (legacy URLs)'; \
+    echo '    RewriteCond %{REQUEST_URI} ^/public/(.*)$'; \
+    echo '    RewriteRule ^public/(.*)$ /$1 [R=301,L]'; \
+    echo ''; \
+    echo '    # Only route to r.php if file/directory does not exist'; \
+    echo '    RewriteCond %{REQUEST_FILENAME} !-f'; \
+    echo '    RewriteCond %{REQUEST_FILENAME} !-d'; \
+    echo '    RewriteRule ^ /r.php [L]'; \
     echo '</Directory>'; \
 } >> /etc/apache2/apache2.conf
 
