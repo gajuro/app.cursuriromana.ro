@@ -19,6 +19,7 @@
 # Temporary files including undo
 *~
 #
+# Config file is bind-mounted and contains sensitive data - do not commit!
 /config.php
 /tags
 /TAGS
@@ -60,3 +61,11 @@ phpcs.xml
 jsconfig.json
 UPGRADING-CURRENT.md
 .phpunit.cache
+
+# Docker
+.env
+.env.local
+.env.*.local
+moodledata/
+localcache/
+persistent/

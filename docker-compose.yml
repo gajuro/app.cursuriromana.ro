@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  moodle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: moodle
+    container_name: moodle-app
+    ports:
+      - "${APP_PORT:-80}:80"
+    environment:
+      # Database configuration
+      - MOODLE_DB_TYPE=${DB_TYPE:-mariadb}
+      - MOODLE_DB_HOST=${DB_HOST:-db}
+      - MOODLE_DB_PORT=${DB_PORT:-3306}
+      - MOODLE_DB_NAME=${DB_NAME:-moodle}
+      - MOODLE_DB_USER=${DB_USER:-moodle}
+      - MOODLE_DB_PASSWORD=${DB_PASSWORD}
+      - MOODLE_DB_PREFIX=${DB_PREFIX:-mdl_}
+      
+      # Moodle configuration
+      - MOODLE_WWWROOT=${WWWROOT:-http://localhost}
+      - MOODLE_DATAROOT=/var/www/moodledata
+      - MOODLE_ADMIN=${ADMIN_USER:-admin}
+      - MOODLE_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - MOODLE_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      
+      # PHP configuration
+      - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
+      - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
+    volumes:
+      # Persistent config storage (managed by entrypoint script)
+      - moodle_config:/var/www/persistent:rw
+      
+      # Persistent data directory (REQUIRED - stores uploads, cache, sessions)
+      - moodle_data:/var/www/moodledata:rw
+      
+      # Persistent local cache (for better performance)
+      - moodle_localcache:/var/www/localcache:rw
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - moodle-network
+
+  db:
+    image: mariadb:11.8
+    container_name: moodle-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME:-moodle}
+      - MYSQL_USER=${DB_USER:-moodle}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "${DB_EXTERNAL_PORT:-3306}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-file-per-table=1
+      - --max-allowed-packet=256M
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - moodle-network
+
+volumes:
+  # Config persistence (stores config.php via entrypoint)
+  moodle_config:
+    driver: local
+  
+  # Moodle data directory (CRITICAL - stores all uploaded files, cache, sessions)
+  moodle_data:
+    driver: local
+  
+  # Local cache directory (improves performance)
+  moodle_localcache:
+    driver: local
+  
+  # Database volume
+  db_data:
+    driver: local
+
+networks:
+  moodle-network:
+    driver: bridge
