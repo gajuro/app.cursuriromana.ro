@@ -86,6 +86,11 @@ RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /e
 
 # Configure Apache for Moodle 4.5+ with Routing Engine
 RUN { \
+    echo '# Strip /public/ prefix if present (handles legacy URLs and cached redirects)'; \
+    echo 'RewriteEngine On'; \
+    echo 'RewriteCond %{REQUEST_URI} ^/public/(.*)'; \
+    echo 'RewriteRule ^public/(.*)$ /$1 [R=301,L]'; \
+    echo ''; \
     echo '<Directory /var/www/html/public>'; \
     echo '    Options Indexes FollowSymLinks'; \
     echo '    AllowOverride None'; \
