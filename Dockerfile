@@ -79,29 +79,28 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chown -R www-data:www-data /var/www/html /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chmod -R 755 /var/www/html
 
-# Remove root index.php redirect (not needed with DocumentRoot pointing to public/)
-RUN rm -f /var/www/html/index.php
-
 # Configure Apache DocumentRoot to point to public directory (Moodle 4.5+ structure)
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
-    && sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|g' /etc/apache2/apache2.conf
+    && sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|g' /etc/apache2/apache2.conf \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Update Apache directory permissions for public directory
+# Configure Apache for Moodle 4.5+ with Routing Engine
 RUN { \
     echo '<Directory /var/www/html/public>'; \
     echo '    Options Indexes FollowSymLinks'; \
-    echo '    AllowOverride All'; \
+    echo '    AllowOverride None'; \
     echo '    Require all granted'; \
     echo '    DirectoryIndex index.php index.html'; \
+    echo '    FallbackResource /r.php'; \
     echo '</Directory>'; \
 } >> /etc/apache2/apache2.conf
 
 # Expose port
 EXPOSE 80
 
-# Health check
+# Health check - check install.php since index.php redirects when no config
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -f http://localhost/install.php || curl -f http://localhost/ || exit 1
 
 # Set entrypoint and default command
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

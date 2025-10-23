@@ -62,3 +62,6 @@ docker-compose.yml
 docker-compose.*.yml
 Dockerfile
 .dockerignore
+
+# Root redirect file (not needed when DocumentRoot points to public/)
+index.php
