@@ -4,8 +4,6 @@ services:
   nginx:
     image: nginx:alpine
     container_name: moodle-nginx
-    ports:
-      - "80:80"
     volumes:
       # Nginx configuration
       - ./nginx.conf:/etc/nginx/conf.d/moodle.conf:ro
