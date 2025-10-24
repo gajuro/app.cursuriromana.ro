@@ -1,0 +1,179 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: moodle
+    environment:
+      # Database configuration
+      - MOODLE_DB_TYPE=${DB_TYPE:-mariadb}
+      - MOODLE_DB_HOST=${DB_HOST:-db}
+      - MOODLE_DB_PORT=${DB_PORT:-3306}
+      - MOODLE_DB_NAME=${DB_NAME:-moodle}
+      - MOODLE_DB_USER=${DB_USER:-moodle}
+      - MOODLE_DB_PASSWORD=${DB_PASSWORD}
+      - MOODLE_DB_PREFIX=${DB_PREFIX:-mdl_}
+      
+      # Moodle configuration
+      - MOODLE_WWWROOT=${WWWROOT:-http://localhost:8080}
+      - MOODLE_DATAROOT=/var/www/moodledata
+      - MOODLE_ADMIN=${ADMIN_USER:-admin}
+      - MOODLE_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - MOODLE_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      
+      # PHP configuration - more permissive for development
+      - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-512M}
+      - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-600}
+      
+      # Development settings
+      - ENVIRONMENT=development
+      - DEBUG=1
+      
+    volumes:
+      # Mount source code for hot-reloading
+      - .:/var/www/html:cached
+      # Exclude .git to prevent permission issues
+      - /var/www/html/.git
+      # Persistent data directory
+      - moodle_data:/var/www/moodledata:rw
+      # Persistent local cache
+      - moodle_localcache:/var/www/localcache:rw
+      # Persistent config storage
+      - moodle_config:/var/www/persistent:rw
+    
+    ports:
+      - "${APP_PORT:-8080}:80"
+    
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    
+    restart: unless-stopped
+    
+    # Development: expose logs to stdout
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: mariadb:11.8
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${DB_NAME:-moodle}
+      - MARIADB_USER=${DB_USER:-moodle}
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "${DB_EXTERNAL_PORT:-3307}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-file-per-table=1
+      - --max-allowed-packet=256M
+      - --innodb-buffer-pool-size=256M
+      - --query-cache-size=16M
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin:latest
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=${DB_USER:-moodle}
+      - PMA_PASSWORD=${DB_PASSWORD}
+      - PMA_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  # Config persistence
+  moodle_config:
+    driver: local
+  
+  # Moodle data directory
+  moodle_data:
+    driver: local
+  
+  # Local cache directory
+  moodle_localcache:
+    driver: local
+  
+  # Database volume
+  db_data:
+    driver: local
+  
+  # Redis volume
+  redis_data:
+    driver: local
