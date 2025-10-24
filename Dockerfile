@@ -102,9 +102,9 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
 # Expose HTTP port (nginx)
 EXPOSE 80
 
-# Health check - verify both nginx and PHP-FPM are running
+# Health check - verify nginx is responding
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD pgrep nginx > /dev/null && pgrep php-fpm > /dev/null || exit 1
+    CMD curl -f http://localhost/ || exit 1
 
 # Create supervisor configuration for managing both services
 RUN mkdir -p /var/log/supervisor
