@@ -90,6 +90,23 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=${DB_USER:-moodle}
+      - PMA_PASSWORD=${DB_PASSWORD}
+      - PMA_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - PMA_ABSOLUTE_URI=${SERVICE_URL_PHPMYADMIN}
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:80"]
+      interval: 2s
+      timeout: 10s
+      retries: 15
+    restart: unless-stopped
+
 volumes:
   # Config persistence (stores config.php via entrypoint)
   moodle_config:
