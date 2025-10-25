@@ -94,12 +94,7 @@ services:
     image: phpmyadmin:latest
     environment:
       - PMA_HOST=db
-      - PMA_USER=${DB_USER:-moodle}
-      - PMA_PASSWORD=${DB_PASSWORD}
-      - PMA_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - PMA_ABSOLUTE_URI=${SERVICE_URL_PHPMYADMIN}
-      - PMA_CONTROLUSER=${DB_USER:-moodle}
-      - PMA_CONTROLPASS=${DB_PASSWORD}
     depends_on:
       - db
     healthcheck:
