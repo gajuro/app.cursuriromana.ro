@@ -94,10 +94,10 @@ RUN ln -s /etc/nginx/sites-available/moodle.conf /etc/nginx/sites-enabled/moodle
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create directories for persistent data
+# Create directories for persistent data and set minimal permissions
 RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
-    && chown -R www-data:www-data /var/www/html /var/www/moodledata /var/www/localcache /var/www/persistent \
-    && chmod -R 755 /var/www/html
+    && chown -R www-data:www-data /var/www/moodledata /var/www/localcache /var/www/persistent \
+    && chown www-data:www-data /var/www/html
 
 # Expose HTTP port (nginx)
 EXPOSE 80
