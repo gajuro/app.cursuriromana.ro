@@ -1,5 +1,12 @@
 {
     "customSyntax": "postcss-scss",
+    "ignoreFiles": [
+        "public/theme/almondb/**/*.scss",
+        "public/mod/survey/**/*.scss",
+        "public/mod/chat/**/*.scss",
+        "public/mod/quiz/accessrule/hidecorrect/**/*.scss",
+        "public/payment/gateway/stripe/**/*.scss"
+    ],
     "plugins": [
         "stylelint-csstree-validator"
     ],
