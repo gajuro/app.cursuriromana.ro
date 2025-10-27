@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="payment/gateway/stripe/db" VERSION="20250728" COMMENT="XMLDB file for Stripe payment gateway plugin"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="paygw_stripe_products" COMMENT="Stores Stripe product info">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="paymentarea" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="paygw_stripe_customers" COMMENT="Maps stripe customer to Moodle user info">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="customerid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign-unique" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="paygw_stripe_checkout_sessions" COMMENT="Stores checkout session IDs to track transaction status.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="checkoutsessionid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="paymentintent" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="customerid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Stripe customer ID"/>
+        <FIELD NAME="amounttotal" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="paymentstatus" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Session payment status"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Session status"/>
+        <FIELD NAME="productid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Stripe product ID"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="checkoutsessionid" UNIQUE="true" FIELDS="checkoutsessionid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="paygw_stripe_webhooks" COMMENT="Stores webhook secrets.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="paymentaccountid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="webhookid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="secret" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="paymentaccountid" UNIQUE="true" FIELDS="paymentaccountid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="paygw_stripe_subscriptions" COMMENT="Stores subscription details">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="subscriptionid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="customerid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Stripe customer ID"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Session status"/>
+        <FIELD NAME="productid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Stripe product ID"/>
+        <FIELD NAME="priceid" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Stripe price ID"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>

@@ -1,0 +1,44 @@
+<script>
+  function initScript() {
+    if (typeof $ === "undefined") {
+      setTimeout(initScript, 100);
+      return;
+    }
+
+    $(document).ready(function () {
+      // if (
+      //   window.location.pathname === "/" ||
+      //   window.location.pathname === "/index.php"
+      // ) {
+      //   window.location.href = window.location.protocol + "//" + window.location.host + "/course";
+      // }
+
+      function hideSuccessButton() {
+        const button = $('button:contains("Încearcă din nou testul")');
+        if (
+          button.length &&
+          $('.alert-success span:contains("Obține o notă de trecere")').length
+        ) {
+          button.hide();
+        }
+      }
+
+      function observerCallback(mutations) {
+        mutations.forEach((mutation) => {
+          if (mutation.type === "childList") {
+            hideSuccessButton();
+          }
+        });
+      }
+
+      const observer = new MutationObserver(observerCallback);
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Initial check
+      hideSuccessButton();
+    });
+  }
+
+  // Start the initialization process
+  initScript();
+</script>
