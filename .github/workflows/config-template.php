@@ -41,6 +41,7 @@ $CFG->dboptions = ['dbcollation' => 'utf8mb4_bin'];
 $host = 'localhost';
 $CFG->wwwroot   = "http://{$host}";
 $CFG->dataroot  = realpath(dirname(__DIR__)) . '/moodledata';
+$CFG->dirroot   = __DIR__ . '/public';
 $CFG->admin     = 'admin';
 $CFG->directorypermissions = 0777;
 
