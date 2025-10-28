@@ -17,7 +17,7 @@ deploy/
 ├── docs/            # Deployment documentation
 │   ├── DOCKER.md
 │   └── DEV_SETUP.md
-└── manual/          # Project-specific documentation
+└── custom/          # Project-specific custom files
 ```
 
 ## Quick Start
