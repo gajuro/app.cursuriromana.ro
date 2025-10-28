@@ -87,11 +87,11 @@ COPY . .
 
 # Copy nginx configuration
 RUN rm -f /etc/nginx/sites-enabled/default
-COPY deploy/docker/nginx.conf /etc/nginx/sites-available/moodle.conf
+COPY ./deploy/docker/nginx.conf /etc/nginx/sites-available/moodle.conf
 RUN ln -s /etc/nginx/sites-available/moodle.conf /etc/nginx/sites-enabled/moodle.conf
 
 # Copy and setup entrypoint script
-COPY deploy/docker/docker-entrypoint.sh /usr/local/bin/
+COPY ./deploy/docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create directories for persistent data and set minimal permissions
