@@ -82,10 +82,7 @@ FROM os AS moodle
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy application files from project root
-COPY . .
-
-# Copy nginx configuration
+# Copy nginx configuration first (before copying all files)
 RUN rm -f /etc/nginx/sites-enabled/default
 COPY ./deploy/docker/nginx.conf /etc/nginx/sites-available/moodle.conf
 RUN ln -s /etc/nginx/sites-available/moodle.conf /etc/nginx/sites-enabled/moodle.conf
@@ -93,6 +90,9 @@ RUN ln -s /etc/nginx/sites-available/moodle.conf /etc/nginx/sites-enabled/moodle
 # Copy and setup entrypoint script
 COPY ./deploy/docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Copy application files from project root (this will overwrite the deploy folder, but we already copied what we need)
+COPY . .
 
 # Create directories for persistent data and set minimal permissions
 RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
