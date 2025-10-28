@@ -60,8 +60,8 @@ error_log
 # Docker files (exclude from Docker build, but deploy/ folder is needed)
 docker-compose.yml
 docker-compose.*.yml
-!deploy/
 .env.dev
 
-# Root redirect file (not needed when DocumentRoot points to public/)
-index.php
+# Keep deploy folder
+!deploy/docker/
+!deploy/docker/*
