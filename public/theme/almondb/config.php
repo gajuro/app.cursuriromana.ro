@@ -25,12 +25,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once(__DIR__ . '/lib.php');
+
 $THEME->name = 'almondb';
 $THEME->sheets = [];
 $THEME->editor_sheets = [];
 $THEME->editor_scss = ['editor'];
 $THEME->usefallback = true;
-$THEME->scss = function($theme) {
+$THEME->scss = function ($theme) {
     return theme_almondb_get_main_scss_content($theme);
 };
 
@@ -49,6 +51,7 @@ $THEME->parents = ['boost'];
 $THEME->enable_dock = false;
 $THEME->extrascsscallback = 'theme_almondb_get_extra_scss';
 $THEME->prescsscallback = 'theme_almondb_get_pre_scss';
+$THEME->precompiledcsscallback = 'theme_almondb_get_precompiled_css';
 $THEME->yuicssmodules = [];
 $THEME->rendererfactory = 'theme_overridden_renderer_factory';
 $THEME->requiredblocks = '';

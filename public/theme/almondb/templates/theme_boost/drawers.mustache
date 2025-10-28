@@ -61,6 +61,9 @@
     {{#courseindex}}
         {{< theme_boost/drawer }}
             {{$id}}theme_boost-drawers-courseindex{{/id}}
+            {{$drawerheadercontent}}
+                {{> theme_boost/courseindexdrawercontrols}}
+            {{/drawerheadercontent}}
             {{$drawerclasses}}drawer drawer-left {{#courseindexopen}}show{{/courseindexopen}}{{/drawerclasses}}
             {{$drawercontent}}
                 {{{courseindex}}}
@@ -76,10 +79,10 @@
             {{$id}}theme_boost-drawers-blocks{{/id}}
             {{$drawerclasses}}drawer drawer-right{{#blockdraweropen}} show{{/blockdraweropen}}{{/drawerclasses}}
             {{$drawercontent}}
-                <section class="d-print-none" aria-label="{{#str}}blocks{{/str}}">
+                <div class="d-print-none">
                     {{{ addblockbutton }}}
                     {{{ sidepreblocks }}}
-                </section>
+                </div>
             {{/drawercontent}}
             {{$drawerpreferencename}}drawer-open-block{{/drawerpreferencename}}
             {{$forceopen}}{{#forceblockdraweropen}}1{{/forceblockdraweropen}}{{/forceopen}}
@@ -100,10 +103,10 @@
                             data-action="toggle"
                             data-target="theme_boost-drawers-courseindex"
                             data-bs-toggle="tooltip"
-                            data-placement="right"
+                            data-bs-placement="right"
                             title="{{#str}}opendrawerindex, core{{/str}}"
                         >
-                            <span class="visually-hidden-focusable">{{#str}}opendrawerindex, core{{/str}}</span>
+                            <span class="visually-hidden">{{#str}}opendrawerindex, core{{/str}}</span>
                             {{#pix}} t/index_drawer, moodle {{/pix}}
                         </button>
                     </div>
@@ -115,17 +118,18 @@
                             data-toggler="drawers"
                             data-action="toggle"
                             data-target="theme_boost-drawers-blocks"
-                            data-bs-oggle="tooltip"
-                            data-placement="right"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="right"
                             title="{{#str}}opendrawerblocks, core{{/str}}"
                         >
-                            <span class="visually-hidden-focusable">{{#str}}opendrawerblocks, core{{/str}}</span>
+                            <span class="visually-hidden">{{#str}}opendrawerblocks, core{{/str}}</span>
                             <span class="dir-rtl-hide">{{#pix}}t/blocks_drawer, core{{/pix}}</span>
                             <span class="dir-ltr-hide">{{#pix}}t/blocks_drawer_rtl, core{{/pix}}</span>
                         </button>
                     </div>
                 {{/hasblocks}}
             </div>
+
            {{#courseheaderimg}}
             <div class="page-header-wrapper has-course-header-image">
                 <div class="course-header-bg">
@@ -155,7 +159,7 @@
                         <div> {{{ regionmainsettingsmenu }}} </div>
                     </div>
                     {{/hasregionmainsettingsmenu}}
-                    <section id="region-main" aria-label="{{#str}}content{{/str}}">
+                    <div id="region-main">
 
                         {{#hasregionmainsettingsmenu}}
                             <div class="region_main_settings_menu_proxy"></div>
@@ -175,7 +179,7 @@
                         {{{ output.activity_navigation }}}
                         {{{ output.course_content_footer }}}
 
-                    </section>
+                    </div>
                 </div>
             </div>
         </div>

@@ -24,7 +24,7 @@
 
 namespace theme_almondb\privacy;
 
-use core_privacy\local\metadata\collection;
+use \core_privacy\local\metadata\collection;
 
 /**
  * The boost theme stores a user preference data.
@@ -37,7 +37,6 @@ class provider implements
     \core_privacy\local\metadata\provider,
     // This plugin has some sitewide user preferences to export.
     \core_privacy\local\request\user_preference_provider {
-
     /** The user preferences for the course index. */
     const DRAWER_OPEN_INDEX = 'drawer-open-index';
 

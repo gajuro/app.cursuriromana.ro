@@ -228,35 +228,37 @@
 nav.navbar .logo img {
     max-height: unset;
 }
-@include media-breakpoint-down(lg) {
+@include media-breakpoint-between(md, lg) {
     #navnarhy_top .logo img {
         height: 40px;
     }
     #navnarhy_top {
         height: 60px;
     }
+    /*
     .simplesearchform .collapse.show,
     .simplesearchform .collapsing {
         height: 60px;
-    }
+    }*/
 }
-@include media-breakpoint-down(sm) {
+@include media-breakpoint-between(sm, md) {
     #navnarhy_top .logo img {
         height: 30px;
     }
     #navnarhy_top {
         height: 55px;
     }
+    /*
     .simplesearchform .collapse.show,
     .simplesearchform .collapsing {
         height: 55px;
-    }
+    } */
     .course-header-bg #page-navbar {
         display: none;
     }
 }
 
-@include media-breakpoint-down(xs) {
+@include media-breakpoint-between(xs, sm) {
     #navnarhy_top .logo img {
         height: 20px;
     }
@@ -267,8 +269,9 @@ nav.navbar .logo img {
             display: none;
         }
     }
+    /*
     .simplesearchform .collapse.show,
     .simplesearchform .collapsing {
         height: 45px;
-    }
+    } */
 }

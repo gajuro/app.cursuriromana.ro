@@ -22,6 +22,7 @@
  * @author    ThemesAlmond - Developer Team
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/behat/lib.php');
@@ -103,6 +104,7 @@ $templatecontext = [
     'headercontent' => $headercontent,
     'addblockbutton' => $addblockbutton,
 ];
+
 // Course page header img.
 if ($COURSE->id != 1) {
     $templatecontext['courseheaderimg'] = almondb_get_course_image($COURSE->id);

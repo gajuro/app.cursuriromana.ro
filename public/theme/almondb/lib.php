@@ -63,8 +63,9 @@ function theme_almondb_get_extra_scss($theme) {
     }
 
     // Always return the background image with the scss when we have it.
-    return !empty($theme->settings->scss) ? $theme->settings->scss . ' ' . $content : $content;
+    return !empty($theme->settings->scss) ? "{$theme->settings->scss}  \n  {$content}" : $content;
 }
+
 /**
  * Serves any files associated with the theme settings.
  *
@@ -92,6 +93,28 @@ function theme_almondb_pluginfile($course, $cm, $context, $filearea, $args, $for
 }
 
 /**
+ * Get the current user preferences that are available
+ *
+ * @return array[]
+ */
+function theme_almondb_user_preferences(): array {
+    return [
+        'drawer-open-block' => [
+            'type' => PARAM_BOOL,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => false,
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+        'drawer-open-index' => [
+            'type' => PARAM_BOOL,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => true,
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+    ];
+}
+
+/**
  * Returns the main SCSS content.
  *
  * @param theme_config $theme The theme config object.
@@ -115,7 +138,18 @@ function theme_almondb_get_main_scss_content($theme) {
         // Safety fallback - maybe new installs etc.
         $scss .= file_get_contents($CFG->dirroot . '/theme/almondb/scss/preset/default.scss');
     }
+
     return $scss;
+}
+
+/**
+ * Get compiled css.
+ *
+ * @return string compiled css
+ */
+function theme_almondb_get_precompiled_css() {
+    global $CFG;
+    return file_get_contents($CFG->dirroot . '/theme/almondb/style/moodle.css');
 }
 
 /**
@@ -125,6 +159,8 @@ function theme_almondb_get_main_scss_content($theme) {
  * @return array
  */
 function theme_almondb_get_pre_scss($theme) {
+    global $CFG;
+
     $scss = '';
     $configurable = [
         // Config key => [variableName, ...].
@@ -143,6 +179,11 @@ function theme_almondb_get_pre_scss($theme) {
         array_map(function($target) use (&$scss, $value) {
             $scss .= '$' . $target . ': ' . $value . ";\n";
         }, (array) $targets);
+    }
+
+    // Add a new variable to indicate that we are running behat.
+    if (defined('BEHAT_SITE_RUNNING')) {
+        $scss .= "\$behatsite: true;\n";
     }
     // Site color.
     $context = $theme->settings->sitecolor;

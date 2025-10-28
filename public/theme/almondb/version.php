@@ -26,7 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 $plugin->component = 'theme_almondb';
-$plugin->version = 2025092600;
-$plugin->requires  = 2025040800;
+$plugin->version = 2025102600;
+$plugin->requires  = 2025092600;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '500.25.0926';
+$plugin->release = '510.25.1026';
