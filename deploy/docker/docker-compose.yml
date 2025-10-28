@@ -6,7 +6,7 @@ services:
   web:
     build:
       context: ../..
-      dockerfile: deploy/docker/Dockerfile
+      dockerfile: ./deploy/docker/Dockerfile
       target: moodle
     environment:
       # Database configuration
