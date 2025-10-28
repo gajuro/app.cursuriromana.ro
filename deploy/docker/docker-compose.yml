@@ -97,6 +97,9 @@ services:
     environment:
       - PMA_HOST=db
       - PMA_ABSOLUTE_URI=${SERVICE_URL_PHPMYADMIN}
+      - UPLOAD_LIMIT=512M
+      - MEMORY_LIMIT=512M
+      - MAX_EXECUTION_TIME=600
     depends_on:
       - db
     healthcheck:
