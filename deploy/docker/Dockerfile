@@ -3,7 +3,7 @@
 # ============================================
 FROM php:8.2-fpm AS os
 
-# Install system dependencies including nginx
+# Install system dependencies including nginx and cron
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     nginx \
     supervisor \
+    cron \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure PHP extensions
@@ -99,6 +100,14 @@ RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chown -R www-data:www-data /var/www/moodledata /var/www/localcache /var/www/persistent \
     && chown www-data:www-data /var/www/html
 
+# Setup Moodle cron job - runs every minute as recommended by Moodle docs
+RUN echo "# Moodle cron job - runs every minute (required for asynchronous activity deletion)" > /etc/cron.d/moodle-cron \
+    && echo "* * * * * www-data /usr/local/bin/php /var/www/html/admin/cli/cron.php >/dev/null 2>&1" >> /etc/cron.d/moodle-cron \
+    && echo "# Additional adhoc task processor for low latency tasks" >> /etc/cron.d/moodle-cron \
+    && echo "* * * * * www-data /usr/local/bin/php /var/www/html/admin/cli/adhoc_task.php --execute --keep-alive=59 >/dev/null 2>&1" >> /etc/cron.d/moodle-cron \
+    && chmod 0644 /etc/cron.d/moodle-cron \
+    && crontab /etc/cron.d/moodle-cron
+
 # Expose HTTP port (nginx)
 EXPOSE 80
 
@@ -106,7 +115,7 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
-# Create supervisor configuration for managing both services
+# Create supervisor configuration for managing all services
 RUN mkdir -p /var/log/supervisor
 COPY <<EOF /etc/supervisor/conf.d/supervisord.conf
 [supervisord]
@@ -133,6 +142,16 @@ stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 priority=20
+
+[program:cron]
+command=/usr/sbin/cron -f
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+priority=30
 EOF
 
 # Set entrypoint and default command

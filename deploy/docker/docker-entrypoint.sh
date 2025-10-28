@@ -47,7 +47,13 @@ trap 'save_config; exit 0' SIGTERM SIGINT
 chown -R www-data:www-data /var/www/moodledata /var/www/localcache /var/www/persistent
 chmod -R 755 /var/www/moodledata /var/www/localcache /var/www/persistent
 
-echo "=== Starting nginx and PHP-FPM ==="
+# Ensure cron service is ready
+echo "✓ Setting up cron service..."
+# Create cron log directory
+mkdir -p /var/log/cron
+chown www-data:www-data /var/log/cron
+
+echo "=== Starting nginx, PHP-FPM, and cron ==="
 
 # Execute the main command (supervisord managing both nginx and PHP-FPM)
 exec "$@"
