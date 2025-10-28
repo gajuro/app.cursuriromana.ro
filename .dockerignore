@@ -1,0 +1,67 @@
+# Git
+.git
+.gitignore
+.gitattributes
+.github
+
+# Documentation
+*.md
+README*
+INSTALL.txt
+COPYING.txt
+TRADEMARK.txt
+UPGRADING.md
+CONTRIBUTING.md
+
+# IDE
+.idea
+.vscode
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Node modules and build artifacts
+node_modules
+npm-debug.log
+.npm
+.grunt
+.shifter.json
+
+# PHP
+vendor
+composer.phar
+
+# Moodle runtime files (should not be in image)
+config.php
+moodledata/
+cache/
+localcache/
+sessions/
+temp/
+trashdir/
+
+# Testing
+phpunit.xml
+.phpunit.result.cache
+behat.yml
+phpcs.xml.dist
+.phpstorm.meta.php
+
+# Logs
+*.log
+error_log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Docker files (exclude from Docker build, but deploy/ folder is needed)
+docker-compose.yml
+docker-compose.*.yml
+!deploy/
+.env.dev
+
+# Root redirect file (not needed when DocumentRoot points to public/)
+index.php
