@@ -5,7 +5,7 @@ name: appcursuriromanaro
 services:
   web:
     build:
-      context: ../..
+      context: .
       dockerfile: deploy/docker/Dockerfile
       target: moodle
     environment:
