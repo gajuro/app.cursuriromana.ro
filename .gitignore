@@ -66,6 +66,10 @@ UPGRADING-CURRENT.md
 .env
 .env.local
 .env.*.local
+.env.dev
 moodledata/
 localcache/
 persistent/
+
+# Deploy folder contains source files, keep root docker-compose files tracked
+# (they are copies for convenience)

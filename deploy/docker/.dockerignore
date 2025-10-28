@@ -57,11 +57,11 @@ error_log
 .env.*
 !.env.example
 
-# Docker files
+# Docker files (exclude from Docker build, but deploy/ folder is needed)
 docker-compose.yml
 docker-compose.*.yml
-Dockerfile
-.dockerignore
+!deploy/
+.env.dev
 
 # Root redirect file (not needed when DocumentRoot points to public/)
 index.php
