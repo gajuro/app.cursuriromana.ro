@@ -54,14 +54,6 @@ error_log
 
 # Environment files
 .env
-.env.*
-!.env.example
-
-# Docker files (exclude from Docker build, but deploy/ folder is needed)
-docker-compose.yml
-docker-compose.*.yml
+.env.local
+.env.production
 .env.dev
-
-# Keep deploy folder
-!deploy/docker/
-!deploy/docker/*
