@@ -47,8 +47,8 @@ RUN { \
     echo 'max_execution_time = 300'; \
     echo 'max_input_time = 300'; \
     echo 'memory_limit = 256M'; \
-    echo 'post_max_size = 100M'; \
-    echo 'upload_max_filesize = 100M'; \
+    echo 'post_max_size = 300M'; \
+    echo 'upload_max_filesize = 300M'; \
     echo 'max_input_vars = 5000'; \
     echo 'opcache.enable = 1'; \
     echo 'opcache.memory_consumption = 256'; \
@@ -58,7 +58,7 @@ RUN { \
     echo 'opcache.validate_timestamps = 1'; \
     echo 'opcache.save_comments = 1'; \
     echo 'opcache.enable_file_override = 0'; \
-} > /usr/local/etc/php/conf.d/moodle.ini
+    } > /usr/local/etc/php/conf.d/moodle.ini
 
 # Configure PHP-FPM
 RUN { \
@@ -73,7 +73,7 @@ RUN { \
     echo 'pm.max_spare_servers = 35'; \
     echo 'pm.max_requests = 500'; \
     echo 'clear_env = no'; \
-} > /usr/local/etc/php-fpm.d/www.conf
+    } > /usr/local/etc/php-fpm.d/www.conf
 
 # ============================================
 # Stage 2: Moodle Application
