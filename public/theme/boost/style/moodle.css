@@ -34005,7 +34005,7 @@ table.question-bank-table th {
   text-align: left;
 }
 table.question-bank-table > tbody > tr.r1 {
-  background-color: transparent;
+  background-color: rgba(var(--bs-emphasis-color-rgb), 0.03);
 }
 table.question-bank-table.generaltable > tbody > tr.highlight.firstrow td {
   border-top: 3px solid #008196;
@@ -36836,9 +36836,6 @@ img.userpicture {
  */
 .path-mod-feedback span.feedback_info {
   font-weight: bold;
-}
-.path-mod-feedback div.feedback_is_dependent {
-  background: #6a737b;
 }
 .path-mod-feedback span.feedback_depend {
   color: #ca3120;

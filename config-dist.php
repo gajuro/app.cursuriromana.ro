@@ -161,28 +161,6 @@ $CFG->dboptions = [
     */
 ];
 
-//=========================================================================
-// 1b. REDIS SESSION HANDLER (Docker Setup)
-//=========================================================================
-// Redis session handler provides significant performance improvements
-// by storing user sessions in Redis instead of the database.
-// This is pre-configured for Docker deployments.
-//
-// Benefits:
-// - 30-50% reduction in database load
-// - Faster session read/write operations
-// - Better scalability for concurrent users
-//
-// Uncomment the following lines to enable Redis sessions:
-
-// $CFG->session_handler_class = '\core\session\redis';
-// $CFG->session_redis_host = 'redis';
-// $CFG->session_redis_port = 6379;
-// $CFG->session_redis_database = 0;
-// $CFG->session_redis_prefix = 'mdl_sess_';
-// $CFG->session_redis_acquire_lock_timeout = 120;
-// $CFG->session_redis_lock_expire = 7200;
-
 
 //=========================================================================
 // 2. WEB SITE LOCATION
@@ -196,13 +174,6 @@ $CFG->dboptions = [
 // http://docs.moodle.org/en/masquerading
 
 $CFG->wwwroot   = 'http://example.com/moodle';
-
-// Generally it is not advisable to use a wwwroot that ends in 'public'.
-// This is because the 'public' directory is used to serve web-accessible content.
-// Moodle looks for any URL which ends in 'public' and assumes that it is a misconfiguration.
-// In the event that there is a need to have a wwwroot that ends in 'public', the
-// following setting can be used to override this check.
-$CFG->wwwrootendsinpublic = false;
 
 //=========================================================================
 // 3. DATA FILES LOCATION

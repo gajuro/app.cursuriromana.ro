@@ -5289,6 +5289,15 @@ class restore_create_categories_and_questions extends restore_structure_step {
                 $this->set_mapping('question_bank_entry', $this->latestqbe->oldid, $this->latestqbe->newid);
             }
 
+            if (
+                ($data->qtype === 'random')
+                && ($this->latestversion->status == \core_question\local\bank\question_version_status::QUESTION_STATUS_HIDDEN)
+            ) {
+                // Ensure that this newly created question is considered by
+                // \qtype_random\task\remove_unused_questions.
+                $this->latestversion->status = \core_question\local\bank\question_version_status::QUESTION_STATUS_DRAFT;
+            }
+
             // Now store the question.
             $newitemid = $DB->insert_record('question', $data);
             $this->set_mapping('question', $oldid, $newitemid);
@@ -6449,15 +6458,15 @@ trait restore_question_set_reference_data_trait {
         ) {
             $newcategoryid = $this->get_mappingid('question_category', $oldcategoryid);
             $filtercondition['filter']['category']['values'][0] = $newcategoryid;
-        }
 
-        if ($context = $this->get_mappingid('context', $data->questionscontextid)) {
-            $data->questionscontextid = $context;
-        } else {
-            $this->log('question_set_reference with old id ' . $data->id .
-                ' referenced question context ' . $data->questionscontextid .
-                ' which was not included in the backup. Therefore, this has been ' .
-                ' restored with the old questionscontextid.', backup::LOG_WARNING);
+            if ($context = $this->get_mappingid('context', $data->questionscontextid)) {
+                $data->questionscontextid = $context;
+            } else {
+                $this->log('question_set_reference with old id ' . $data->id .
+                    ' referenced question context ' . $data->questionscontextid .
+                    ' which was not included in the backup. Therefore, this has been ' .
+                    ' restored with the old questionscontextid.', backup::LOG_WARNING);
+            }
         }
 
         $filtercondition['cat'] = implode(',', [
