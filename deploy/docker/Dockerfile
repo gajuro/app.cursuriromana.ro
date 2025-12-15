@@ -97,7 +97,7 @@ COPY . .
 
 # Install Composer and dependencies
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && cd /var/www/html/public && composer install --no-dev --classmap-authoritative --no-interaction
+    && composer install --no-dev --classmap-authoritative --no-interaction
 
 # Create directories for persistent data and set minimal permissions
 RUN mkdir -p /var/www/moodledata /var/www/localcache /var/www/persistent \
