@@ -57,7 +57,7 @@ function theme_almondb_slideshow() {
         $templatecontext['slides'][$j]['title'] = format_string($theme->settings->$slidertitle);
         $templatecontext['slides'][$j]['caption'] = format_string($theme->settings->$slidercap);
         $templatecontext['slides'][$j]['button'] = format_string($theme->settings->$sliderbutton);
-        $templatecontext['slides'][$j]['buttonurl'] = format_string($theme->settings->$sliderurl);
+        $templatecontext['slides'][$j]['buttonurl'] = $theme->settings->$sliderurl;
         if ($i === 1) {
             $templatecontext['slides'][$j]['active'] = true;
         }

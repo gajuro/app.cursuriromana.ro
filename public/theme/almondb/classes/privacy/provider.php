@@ -24,7 +24,7 @@
 
 namespace theme_almondb\privacy;
 
-use \core_privacy\local\metadata\collection;
+use core_privacy\local\metadata\collection;
 
 /**
  * The boost theme stores a user preference data.

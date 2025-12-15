@@ -176,7 +176,7 @@ function theme_almondb_get_pre_scss($theme) {
         if (empty($value)) {
             continue;
         }
-        array_map(function($target) use (&$scss, $value) {
+        array_map(function ($target) use (&$scss, $value) {
             $scss .= '$' . $target . ': ' . $value . ";\n";
         }, (array) $targets);
     }
@@ -207,7 +207,7 @@ function theme_almondb_get_pre_scss($theme) {
  */
 function theme_almondb_theme_url() {
     global $CFG, $PAGE;
-    $themeurl = $CFG->wwwroot.'/theme/'. $PAGE->theme->name;
+    $themeurl = $CFG->wwwroot .'/theme/'. $PAGE->theme->name;
     return $themeurl;
 }
 
