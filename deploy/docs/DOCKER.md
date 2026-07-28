@@ -294,6 +294,28 @@ Acest setup include **optimizări automate** pentru performanță maximă:
 - Setează backup-uri automate
 - Nu expune portul bazei de date public (elimină `ports` pentru serviciul `db` în producție)
 
+## Limita de upload (fișiere mari / video)
+
+Limita efectivă este cea mai mică valoare dintre trei straturi:
+
+1. **Cloudflare** — planul Free respinge orice upload peste **100 MB** cu 413,
+   înainte ca cererea să ajungă la server. Nu se poate ridica pe planul Free.
+   `app.cursuriromana.ro` are de aceea un record A dedicat, **DNS-only (grey
+   cloud)**, către origine (`152.53.226.112`), care are prioritate față de
+   wildcard-ul `*.cursuriromana.ro` (acesta rămâne proxied).
+   Certificatul TLS e emis de Let's Encrypt prin Traefik/Coolify, deci HTTPS
+   funcționează și fără Cloudflare.
+2. **nginx** — `client_max_body_size` în `deploy/docker/nginx.conf`.
+3. **PHP** — `post_max_size` și `upload_max_filesize` în `deploy/docker/Dockerfile`.
+
+Valorile 2 și 3 trebuie ținute sincronizate; ambele sunt acum **1G**.
+
+Atenție și la `$CFG->userquota` (100 MB per utilizator, în Moodle). Adminii au
+capabilitatea `moodle/user:ignoreuserquota`, dar un profesor obișnuit va fi
+blocat de această cotă chiar dacă straturile de mai sus permit fișierul.
+
+Verificat pe 2026-07-28: upload de 420 MB reușit prin domeniul public.
+
 ## Suport
 
 Pentru probleme specifice Moodle: https://docs.moodle.org/

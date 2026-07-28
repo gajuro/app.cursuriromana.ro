@@ -47,8 +47,8 @@ RUN { \
     echo 'max_execution_time = 300'; \
     echo 'max_input_time = 300'; \
     echo 'memory_limit = 256M'; \
-    echo 'post_max_size = 300M'; \
-    echo 'upload_max_filesize = 300M'; \
+    echo 'post_max_size = 1G'; \
+    echo 'upload_max_filesize = 1G'; \
     echo 'max_input_vars = 5000'; \
     echo 'opcache.enable = 1'; \
     echo 'opcache.memory_consumption = 256'; \
